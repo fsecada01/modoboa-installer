@@ -5,4 +5,4 @@ PATH="/root/.local/bin/:$PATH"
 cd /opt/modoboa || exit
 uv venv .venv
 source .venv/bin/activate
-uv pip install -U setuptools wheel -I
+uv pip install -U setuptools wheel

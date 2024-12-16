@@ -1,0 +1,57 @@
+repos:
+  - hooks:
+      - id: check-ast
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-builtin-literals
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+    repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v5.0.0
+  - hooks:
+      - id: add-trailing-comma
+    repo: 'https://github.com/asottile/add-trailing-comma'
+    rev: v3.1.0
+  - hooks:
+      - id: pyupgrade
+    repo: 'https://github.com/asottile/pyupgrade'
+    rev: v3.19.0
+  - hooks:
+      - args:
+          - '--target-version'
+          - '5.1'
+        id: django-upgrade
+    repo: 'https://github.com/adamchainz/django-upgrade'
+    rev: 1.22.1
+  # - repo: https://github.com/aufdenpunkt/pre-commit-js-beautify
+  #   rev: 1.13.0 # represents the used version of JS Beautify as well
+    # hooks:
+    # -   id: js-beautify
+    #     args: ['--html', '--wrap-attributes=force-aligned', '--wrap-line-length=80', "--templating=django"]
+    #     files: \.(html|jinja)$
+  - hooks:
+      - id: djlint-reformat-django
+      # - id: djlint-django
+    repo: 'https://github.com/Riverside-Healthcare/djLint'
+    rev: v1.36.1
+  - hooks:
+      - args:
+          - '--fix'
+          - '--exit-non-zero-on-fix'
+        id: ruff
+    repo: 'https://github.com/astral-sh/ruff-pre-commit'
+    rev: v0.8.0
+  - hooks:
+      - id: black
+        language_version: python3.12
+    repo: 'https://github.com/psf/black'
+    rev: 24.10.0
+  - hooks:
+      - id: isort
+        name: isort (python)
+    repo: 'https://github.com/pycqa/isort'
+    rev: 5.13.2

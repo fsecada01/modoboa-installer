@@ -1,21 +1,20 @@
 """ClamAV related tools."""
 
-from .. import package
-from .. import utils
-from .. import system
-
+from .. import package, system, utils
 from . import base
 
 
 class Clamav(base.Installer):
-
     """ClamAV installer."""
 
     appname = "clamav"
     packages = {
         "deb": ["clamav-daemon"],
         "rpm": [
-            "clamav", "clamav-update", "clamav-server", "clamav-server-systemd"
+            "clamav",
+            "clamav-update",
+            "clamav-server",
+            "clamav-server-systemd",
         ],
     }
 
@@ -43,21 +42,26 @@ class Clamav(base.Installer):
         if package.backend.FORMAT == "deb":
             user = self.config.get(self.appname, "user")
             system.add_user_to_group(
-                user, self.config.get("amavis", "user")
+                user,
+                self.config.get("amavis", "user"),
             )
             pattern = (
                 "s/^AllowSupplementaryGroups false/"
-                "AllowSupplementaryGroups true/")
+                "AllowSupplementaryGroups true/"
+            )
             utils.exec_cmd(
-                "perl -pi -e '{}' /etc/clamav/clamd.conf".format(pattern))
+                "perl -pi -e '{}' /etc/clamav/clamd.conf".format(pattern),
+            )
         else:
             user = "clamupdate"
             utils.exec_cmd(
-                "perl -pi -e 's/^Example/#Example/' /etc/freshclam.conf")
+                "perl -pi -e 's/^Example/#Example/' /etc/freshclam.conf",
+            )
             # Check if not present before
             path = "/usr/lib/systemd/system/clamd@.service"
             code, output = utils.exec_cmd(
-                r"grep 'WantedBy\s*=\s*multi-user.target' {}".format(path))
+                r"grep 'WantedBy\s*=\s*multi-user.target' {}".format(path),
+            )
             if code:
                 utils.exec_cmd(
                     """cat <<EOM >> {}
@@ -65,7 +69,10 @@ class Clamav(base.Installer):
 [Install]
 WantedBy=multi-user.target
 EOM
-""".format(path))
+""".format(
+                        path,
+                    ),
+                )
 
         if utils.dist_name() in ["debian", "ubuntu"]:
             # Stop freshclam daemon to allow manual download

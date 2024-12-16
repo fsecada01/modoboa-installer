@@ -57,7 +57,7 @@ bayes_sql_password    %dbpassword
 
 
 #   Some shortcircuiting, if the plugin is enabled
-# 
+#
 ifplugin Mail::SpamAssassin::Plugin::Shortcircuit
 #
 #   default: strongly-whitelisted mails are *really* whitelisted now, if the

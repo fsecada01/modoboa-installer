@@ -4,11 +4,7 @@ import os
 import shutil
 import stat
 
-from .. import package
-from .. import python
-from .. import system
-from .. import utils
-
+from .. import package, python, system, utils
 from . import base
 
 
@@ -20,7 +16,7 @@ class Radicale(base.Installer):
     no_daemon = True
     packages = {
         "deb": ["supervisor"],
-        "rpm": ["supervisor"]
+        "rpm": ["supervisor"],
     }
     with_user = True
 
@@ -33,27 +29,35 @@ class Radicale(base.Installer):
         """Prepare a dedicated virtualenv."""
         python.setup_virtualenv(self.venv_path, sudo_user=self.user)
         packages = [
-            "Radicale", "radicale-dovecot-auth", "pytz"
+            "Radicale",
+            "radicale-dovecot-auth",
+            "pytz",
         ]
         python.install_packages(packages, self.venv_path, sudo_user=self.user)
         python.install_package_from_repository(
             "radicale-storage-by-index",
             "https://github.com/tonioo/RadicaleStorageByIndex",
-            venv=self.venv_path, sudo_user=self.user)
+            venv=self.venv_path,
+            sudo_user=self.user,
+        )
 
     def get_template_context(self):
         """Additional variables."""
-        context = super(Radicale, self).get_template_context()
+        context = super().get_template_context()
         radicale_auth_socket_path = self.config.get(
-            "dovecot", "radicale_auth_socket_path")
-        context.update({
-            "auth_socket_path": radicale_auth_socket_path
-        })
+            "dovecot",
+            "radicale_auth_socket_path",
+        )
+        context.update(
+            {
+                "auth_socket_path": radicale_auth_socket_path,
+            },
+        )
         return context
 
     def get_config_files(self):
         """Return appropriate path."""
-        config_files = super(Radicale, self).get_config_files()
+        config_files = super().get_config_files()
         if package.backend.FORMAT == "deb":
             path = "supervisor=/etc/supervisor/conf.d/radicale.conf"
         else:
@@ -66,16 +70,22 @@ class Radicale(base.Installer):
         if not os.path.exists(self.config_dir):
             utils.mkdir(
                 self.config_dir,
-                stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP |
-                stat.S_IROTH | stat.S_IXOTH,
-                0, 0
+                stat.S_IRWXU
+                | stat.S_IRGRP
+                | stat.S_IXGRP
+                | stat.S_IROTH
+                | stat.S_IXOTH,
+                0,
+                0,
             )
         super().install_config_files()
 
     def restore(self):
         """Restore collections."""
         radicale_backup = os.path.join(
-            self.archive_path, "custom/radicale")
+            self.archive_path,
+            "custom/radicale",
+        )
         if os.path.isdir(radicale_backup):
             restore_target = os.path.join(self.home_dir, "collections")
             if os.path.isdir(restore_target):
@@ -95,9 +105,20 @@ class Radicale(base.Installer):
 
     def custom_backup(self, path):
         """Backup collections."""
-        radicale_backup = os.path.join(self.config.get(
-            "radicale", "home_dir", fallback="/srv/radicale"), "collections")
+        radicale_backup = os.path.join(
+            self.config.get(
+                "radicale",
+                "home_dir",
+                fallback="/srv/radicale",
+            ),
+            "collections",
+        )
         if os.path.isdir(radicale_backup):
-            shutil.copytree(radicale_backup, os.path.join(
-                path, "radicale"))
+            shutil.copytree(
+                radicale_backup,
+                os.path.join(
+                    path,
+                    "radicale",
+                ),
+            )
             utils.printcolor("Radicale files saved", utils.GREEN)

@@ -2,10 +2,7 @@
 
 import os
 
-from .. import package
-from .. import system
-from .. import utils
-
+from .. import package, system, utils
 from . import base
 from .uwsgi import Uwsgi
 
@@ -16,18 +13,24 @@ class Nginx(base.Installer):
     appname = "nginx"
     packages = {
         "deb": ["nginx", "ssl-cert"],
-        "rpm": ["nginx"]
+        "rpm": ["nginx"],
     }
 
     def get_template_context(self, app):
         """Additionnal variables."""
         context = super().get_template_context()
-        context.update({
-            "app_instance_path": (
-                self.config.get(app, "instance_path")),
-            "uwsgi_socket_path": (
-                Uwsgi(self.config, self.upgrade, self.restore).get_socket_path(app))
-        })
+        context.update(
+            {
+                "app_instance_path": (self.config.get(app, "instance_path")),
+                "uwsgi_socket_path": (
+                    Uwsgi(
+                        self.config,
+                        self.upgrade,
+                        self.restore,
+                    ).get_socket_path(app)
+                ),
+            },
+        )
         return context
 
     def _setup_config(self, app, hostname=None, extra_config=None):
@@ -39,10 +42,16 @@ class Nginx(base.Installer):
         src = self.get_file_path("{}.conf.tpl".format(app))
         if package.backend.FORMAT == "deb":
             dst = os.path.join(
-                self.config_dir, "sites-available", "{}.conf".format(hostname))
+                self.config_dir,
+                "sites-available",
+                "{}.conf".format(hostname),
+            )
             utils.copy_from_template(src, dst, context)
             link = os.path.join(
-                self.config_dir, "sites-enabled", os.path.basename(dst))
+                self.config_dir,
+                "sites-enabled",
+                os.path.basename(dst),
+            )
             if os.path.exists(link):
                 return
             os.symlink(dst, link)
@@ -50,7 +59,10 @@ class Nginx(base.Installer):
             user = "www-data"
         else:
             dst = os.path.join(
-                self.config_dir, "conf.d", "{}.conf".format(hostname))
+                self.config_dir,
+                "conf.d",
+                "{}.conf".format(hostname),
+            )
             utils.copy_from_template(src, dst, context)
             group = "uwsgi"
             user = "nginx"
@@ -61,7 +73,8 @@ class Nginx(base.Installer):
         extra_modoboa_config = ""
         if self.config.getboolean("automx", "enabled"):
             hostname = "autoconfig.{}".format(
-                self.config.get("general", "domain"))
+                self.config.get("general", "domain"),
+            )
             self._setup_config("automx", hostname)
             extra_modoboa_config = """
     location ~* ^/autodiscover/autodiscover.xml {
@@ -83,7 +96,9 @@ class Nginx(base.Installer):
     }
 """
         self._setup_config(
-            "modoboa", extra_config=extra_modoboa_config)
+            "modoboa",
+            extra_config=extra_modoboa_config,
+        )
 
         if not os.path.exists("{}/dhparam.pem".format(self.config_dir)):
             cmd = "openssl dhparam -dsaparam -out dhparam.pem 4096"

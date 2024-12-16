@@ -34,10 +34,15 @@ class DEBPackage(Package):
         self.policy_file = "/usr/sbin/policy-rc.d"
 
     def enable_backports(self, codename):
-        code, output = utils.exec_cmd(f"grep {codename}-backports /etc/apt/sources.list")
+        code, output = utils.exec_cmd(
+            f"grep {codename}-backports /etc/apt/sources.list",
+        )
         if code:
-            with open(f"/etc/apt/sources.list.d/backports.list", "w") as fp:
-                fp.write(f"deb http://deb.debian.org/debian {codename}-backports main\n")
+            with open("/etc/apt/sources.list.d/backports.list", "w") as fp:
+                fp.write(
+                    f"deb http://deb.debian.org/debian {codename}-backports "
+                    f"main\n",
+                )
             self.update(force=True)
 
     def prepare_system(self):
@@ -64,18 +69,24 @@ class DEBPackage(Package):
     def install(self, name):
         """Install a package."""
         self.update()
-        utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o DPkg::options::=--force-confold {}".format(name))
+        utils.exec_cmd(
+            "apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o "
+            f"DPkg::options::=--force-confold {name}",
+        )
 
     def install_many(self, names):
         """Install many packages."""
         self.update()
-        return utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o DPkg::options::=--force-confold {}".format(
-            " ".join(names)))
+        return utils.exec_cmd(
+            "apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o "
+            f"DPkg::options::=--force-confold {" ".join(names)}",
+        )
 
-    def get_installed_version(self, name):
+    def get_installed_version(self, name):  # noqa
         """Get installed package version."""
         code, output = utils.exec_cmd(
-            "dpkg -s {} | grep Version".format(name))
+            "dpkg -s {} | grep Version".format(name),
+        )
         match = re.match(r"Version: (\d:)?(.+)-\d", output.decode())
         if match:
             return match.group(2)
@@ -89,7 +100,7 @@ class RPMPackage(Package):
 
     def __init__(self, dist_name):
         """Initialize backend."""
-        super(RPMPackage, self).__init__(dist_name)
+        super().__init__(dist_name)
         if "centos" in dist_name:
             self.install("epel-release")
 
@@ -99,12 +110,15 @@ class RPMPackage(Package):
 
     def install_many(self, names):
         """Install many packages."""
-        return utils.exec_cmd("yum install -y --quiet {}".format(" ".join(names)))
+        return utils.exec_cmd(
+            "yum install -y --quiet {}".format(" ".join(names)),
+        )
 
     def get_installed_version(self, name):
         """Get installed package version."""
         code, output = utils.exec_cmd(
-            "rpm -qi {} | grep Version".format(name))
+            "rpm -qi {} | grep Version".format(name),
+        )
         match = re.match(r"Version\s+: (.+)", output.decode())
         if match:
             return match.group(1)
@@ -121,7 +135,8 @@ def get_backend():
         backend = RPMPackage
     else:
         raise NotImplementedError(
-            "Sorry, this distribution is not supported yet.")
+            "Sorry, this distribution is not supported yet.",
+        )
     return backend(distname)
 
 

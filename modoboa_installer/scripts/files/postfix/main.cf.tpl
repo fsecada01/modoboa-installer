@@ -145,17 +145,17 @@ smtpd_recipient_restrictions =
 postscreen_access_list =
        permit_mynetworks
        cidr:/etc/postfix/postscreen_spf_whitelist.cidr
-postscreen_blacklist_action = enforce 
+postscreen_blacklist_action = enforce
 
 # Use some DNSBL
-postscreen_dnsbl_sites = 
+postscreen_dnsbl_sites =
 	zen.spamhaus.org=127.0.0.[2..11]*3
 	bl.spameatingmonkey.net=127.0.0.2*2
 	bl.spamcop.net=127.0.0.2
-postscreen_dnsbl_threshold = 3 
-postscreen_dnsbl_action = enforce 
+postscreen_dnsbl_threshold = 3
+postscreen_dnsbl_action = enforce
 
-postscreen_greet_banner = Welcome, please wait... 
+postscreen_greet_banner = Welcome, please wait...
 postscreen_greet_action = enforce
 
 postscreen_pipelining_enable = yes

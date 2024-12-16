@@ -24,7 +24,7 @@ SigningTable		dsn:%db_driver://%{db_user}:%{db_password}@%{dbport}+%{dbhost}/%{d
 # Commonly-used options; the commented-out versions show the defaults.
 #Canonicalization	simple
 #Mode			sv
-SubDomains		yes	
+SubDomains		yes
 Canonicalization        relaxed/relaxed
 
 # Socket smtp://localhost

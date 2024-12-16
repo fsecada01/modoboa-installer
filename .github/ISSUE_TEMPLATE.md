@@ -12,4 +12,3 @@
 # Expected behavior
 
 # Video/Screenshot link (optional)
-

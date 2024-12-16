@@ -1,0 +1,78 @@
+
+[tool.ruff]
+lint.select = ["E", "F", "B"]
+#select = ["E", "F", "I", "PL", "I", "B"]
+lint.ignore = ["B008"]
+lint.ignore-init-module-imports = true
+lint.unfixable = []
+fix = true
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "migrations",
+]
+
+line-length = 80
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F403", "F405", "E501"]
+"consts.py" = ["E501"]
+
+[tool.black]
+line-length = 80
+target-version = ["py310", "py311", "py312", "py313"]
+extend-exclude = '''
+/(
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+  | profiling
+)/
+'''
+[tool.isort]
+profile = 'black'
+line_length = 80
+
+[tool.djlint]
+profile="django"
+format_attribute_template_tags=true
+line_break_after_multiline_tag=true
+max_attribute_length=10
+max_line_length=79
+
+[project]
+name = "modoboa_email_service"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+version = "1.0.0b0"
+
+[dependency-groups]
+dev = [
+    "codecov>=2.1.13",
+    "mock>=5.1.0",
+]

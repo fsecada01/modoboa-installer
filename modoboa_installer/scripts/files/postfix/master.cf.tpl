@@ -11,7 +11,7 @@
 # ==========================================================================
 smtp      inet  n       -       -       -       1       postscreen
 smtpd     pass  -       -       -       -       -       smtpd
-%{amavis_enabled}  -o smtpd_proxy_filter=inet:[127.0.0.1]:10024 
+%{amavis_enabled}  -o smtpd_proxy_filter=inet:[127.0.0.1]:10024
 %{amavis_enabled}  -o smtpd_proxy_options=speed_adjust
 dnsblog   unix  -       -       -       -       0       dnsblog
 
@@ -131,22 +131,22 @@ autoreply unix        -       n       n       -       -       pipe
 
 # Amavis return path
 #
-%{amavis_enabled}127.0.0.1:10025 inet n    -       n       -       -     smtpd 
-%{amavis_enabled}        -o content_filter= 
-%{amavis_enabled}        -o smtpd_authorized_xforward_hosts=127.0.0.0/8 
-%{amavis_enabled}        -o smtpd_delay_reject=no 
-%{amavis_enabled}        -o smtpd_client_restrictions=permit_mynetworks,reject 
-%{amavis_enabled}        -o smtpd_helo_restrictions= 
-%{amavis_enabled}        -o smtpd_sender_restrictions= 
-%{amavis_enabled}        -o smtpd_recipient_restrictions=permit_mynetworks,reject 
-%{amavis_enabled}        -o smtpd_data_restrictions=reject_unauth_pipelining 
-%{amavis_enabled}        -o smtpd_end_of_data_restrictions= 
-%{amavis_enabled}        -o smtpd_restriction_classes= 
-%{amavis_enabled}        -o mynetworks=127.0.0.0/8 
-%{amavis_enabled}        -o smtpd_error_sleep_time=0 
-%{amavis_enabled}        -o smtpd_soft_error_limit=1001 
-%{amavis_enabled}        -o smtpd_hard_error_limit=1000 
-%{amavis_enabled}        -o smtpd_client_connection_count_limit=0 
-%{amavis_enabled}        -o smtpd_client_connection_rate_limit=0 
+%{amavis_enabled}127.0.0.1:10025 inet n    -       n       -       -     smtpd
+%{amavis_enabled}        -o content_filter=
+%{amavis_enabled}        -o smtpd_authorized_xforward_hosts=127.0.0.0/8
+%{amavis_enabled}        -o smtpd_delay_reject=no
+%{amavis_enabled}        -o smtpd_client_restrictions=permit_mynetworks,reject
+%{amavis_enabled}        -o smtpd_helo_restrictions=
+%{amavis_enabled}        -o smtpd_sender_restrictions=
+%{amavis_enabled}        -o smtpd_recipient_restrictions=permit_mynetworks,reject
+%{amavis_enabled}        -o smtpd_data_restrictions=reject_unauth_pipelining
+%{amavis_enabled}        -o smtpd_end_of_data_restrictions=
+%{amavis_enabled}        -o smtpd_restriction_classes=
+%{amavis_enabled}        -o mynetworks=127.0.0.0/8
+%{amavis_enabled}        -o smtpd_error_sleep_time=0
+%{amavis_enabled}        -o smtpd_soft_error_limit=1001
+%{amavis_enabled}        -o smtpd_hard_error_limit=1000
+%{amavis_enabled}        -o smtpd_client_connection_count_limit=0
+%{amavis_enabled}        -o smtpd_client_connection_rate_limit=0
 %{amavis_enabled}        -o receive_override_options=no_header_body_checks,no_unknown_recipient_checks
 %{amavis_enabled}        -o local_header_rewrite_clients=permit_mynetworks,permit_sasl_authenticated

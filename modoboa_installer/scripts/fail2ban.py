@@ -9,7 +9,7 @@ class Fail2ban(base.Installer):
     appname = "fail2ban"
     packages = {
         "deb": ["fail2ban"],
-        "rpm": ["fail2ban"]
+        "rpm": ["fail2ban"],
     }
     config_files = [
         "jail.d/modoboa.conf",

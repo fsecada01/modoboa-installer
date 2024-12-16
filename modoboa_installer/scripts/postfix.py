@@ -4,13 +4,11 @@ try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
+
 import os
 
-from .. import package
-from .. import utils
-
-from . import base
-from . import backup, install
+from .. import package, utils
+from . import backup, base, install
 
 
 class Postfix(base.Installer):
@@ -45,23 +43,37 @@ class Postfix(base.Installer):
                 config.write(fp)
 
         package.backend.preconfigure(
-            "postfix", "main_mailer_type", "select", "No configuration")
+            "postfix",
+            "main_mailer_type",
+            "select",
+            "No configuration",
+        )
         super().install_packages()
 
     def get_template_context(self):
         """Additional variables."""
         context = super().get_template_context()
-        context.update({
-            "db_driver": self.db_driver,
-            "dovecot_mailboxes_owner": self.config.get(
-                "dovecot", "mailboxes_owner"),
-            "modoboa_venv_path": self.config.get(
-                "modoboa", "venv_path"),
-            "modoboa_instance_path": self.config.get(
-                "modoboa", "instance_path"),
-            "opendkim_port": self.config.get(
-                "opendkim", "port")
-        })
+        context.update(
+            {
+                "db_driver": self.db_driver,
+                "dovecot_mailboxes_owner": self.config.get(
+                    "dovecot",
+                    "mailboxes_owner",
+                ),
+                "modoboa_venv_path": self.config.get(
+                    "modoboa",
+                    "venv_path",
+                ),
+                "modoboa_instance_path": self.config.get(
+                    "modoboa",
+                    "instance_path",
+                ),
+                "opendkim_port": self.config.get(
+                    "opendkim",
+                    "port",
+                ),
+            },
+        )
         return context
 
     def check_dhe_group_file(self):
@@ -78,8 +90,12 @@ class Postfix(base.Installer):
         instance_path = self.config.get("modoboa", "instance_path")
         script_path = os.path.join(instance_path, "manage.py")
         cmd = (
-            "{} {} generate_postfix_maps --destdir {} --force-overwrite"
-            .format(python_path, script_path, self.config_dir))
+            "{} {} generate_postfix_maps --destdir {} --force-overwrite".format(
+                python_path,
+                script_path,
+                self.config_dir,
+            )
+        )
         utils.exec_cmd(cmd)
 
         # Check chroot directory

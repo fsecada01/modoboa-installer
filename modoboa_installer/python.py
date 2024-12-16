@@ -3,8 +3,7 @@
 import os
 import sys
 
-from . import package
-from . import utils
+from . import package, utils
 
 
 def get_path(cmd, venv=None):
@@ -30,7 +29,7 @@ def install_package(name, venv=None, upgrade=False, binary=True, **kwargs):
         " -U" if upgrade else "",
         " --no-binary :all:" if not binary else "",
         " --pre" if kwargs.pop("beta", False) else "",
-        name
+        name,
     )
     utils.exec_cmd(cmd, **kwargs)
 
@@ -41,7 +40,7 @@ def install_packages(names, venv=None, upgrade=False, **kwargs):
         get_pip_path(venv),
         " -U " if upgrade else "",
         " --pre" if kwargs.pop("beta", False) else "",
-        " ".join(names)
+        " ".join(names),
     )
     utils.exec_cmd(cmd, **kwargs)
 
@@ -50,12 +49,11 @@ def get_package_version(name, venv=None, **kwargs):
     """Returns the version of an installed package."""
     cmd = "{} show {}".format(
         get_pip_path(venv),
-        name
+        name,
     )
     exit_code, output = utils.exec_cmd(cmd, **kwargs)
     if exit_code != 0:
-        utils.error(f"Failed to get version of {name}. "
-                    f"Output is: {output}")
+        utils.error(f"Failed to get version of {name}. " f"Output is: {output}")
         sys.exit(1)
 
     version_list_clean = []
@@ -70,12 +68,14 @@ def get_package_version(name, venv=None, **kwargs):
             except ValueError:
                 utils.printcolor(
                     f"Failed to decode some part of the version of {name}",
-                    utils.YELLOW)
+                    utils.YELLOW,
+                )
                 version_list_clean.append(element)
     if len(version_list_clean) == 0:
         utils.printcolor(
             f"Failed to find the version of {name}",
-            utils.RED)
+            utils.RED,
+        )
         sys.exit(1)
     return version_list_clean
 
@@ -85,7 +85,11 @@ def install_package_from_repository(name, url, vcs="git", venv=None, **kwargs):
     if vcs == "git":
         package.backend.install("git")
     cmd = "{} install -e {}+{}#egg={}".format(
-        get_pip_path(venv), vcs, url, name)
+        get_pip_path(venv),
+        vcs,
+        url,
+        name,
+    )
     utils.exec_cmd(cmd, **kwargs)
 
 
@@ -94,7 +98,7 @@ def install_package_from_remote_requirements(url, venv=None, **kwargs):
     cmd = "{} install {} {}".format(
         get_pip_path(venv),
         "-r",
-        url
+        url,
     )
     utils.exec_cmd(cmd, **kwargs)
 

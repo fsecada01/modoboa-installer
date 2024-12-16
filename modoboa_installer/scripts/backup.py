@@ -1,15 +1,14 @@
 """Backup script for pre-installed instance."""
 
+import datetime
 import os
-import pwd
 import shutil
 import stat
 import sys
-import datetime
 
-from .. import database
-from .. import utils
+from .. import database, utils
 from ..constants import DEFAULT_BACKUP_DIRECTORY
+from ..utils import get_user_info
 
 
 class Backup:
@@ -50,12 +49,20 @@ class Backup:
         if not path_exists:
             if not self.silent_backup:
                 create_dir = input(
-                    f"\"{path}\" doesn't exist, would you like to create it? [Y/n]\n").lower()
+                    f'"{path}" doesn\'t exist, would you like to create it? '
+                    f"[Y/n]\n",
+                ).lower()
 
-            if self.silent_backup or (not self.silent_backup and create_dir.startswith("y")):
-                pw = pwd.getpwnam("root")
-                utils.mkdir_safe(path, stat.S_IRWXU |
-                                 stat.S_IRWXG, pw[2], pw[3])
+            if self.silent_backup or (
+                not self.silent_backup and create_dir.startswith("y")
+            ):
+                un, uid, gid, dir_str = get_user_info(username="root")
+                utils.mkdir_safe(
+                    path,
+                    stat.S_IRWXU | stat.S_IRWXG,
+                    uid,
+                    gid,
+                )
             else:
                 utils.error("Error, backup directory not present.")
                 return False
@@ -63,29 +70,40 @@ class Backup:
         if len(os.listdir(path)) != 0:
             if not self.silent_backup:
                 delete_dir = input(
-                    "Warning: backup directory is not empty, it will be purged if you continue... [Y/n]\n").lower()
+                    "Warning: backup directory is not empty, it will be purged "
+                    "if you continue... [Y/n]\n",
+                ).lower()
 
-            if self.silent_backup or (not self.silent_backup and delete_dir.startswith("y")):
+            if self.silent_backup or (
+                not self.silent_backup and delete_dir.startswith("y")
+            ):
                 try:
                     os.remove(os.path.join(path, "installer.cfg"))
                 except FileNotFoundError:
                     pass
 
-                shutil.rmtree(os.path.join(path, "custom"),
-                              ignore_errors=False)
+                shutil.rmtree(
+                    os.path.join(path, "custom"),
+                    ignore_errors=False,
+                )
                 shutil.rmtree(os.path.join(path, "mails"), ignore_errors=False)
-                shutil.rmtree(os.path.join(path, "databases"),
-                              ignore_errors=False)
+                shutil.rmtree(
+                    os.path.join(path, "databases"),
+                    ignore_errors=False,
+                )
             else:
                 utils.error("Error: backup directory not clean.")
                 return False
 
         self.backup_path = path
-
-        pw = pwd.getpwnam("root")
-        for dir in ["custom/", "databases/"]:
-            utils.mkdir_safe(os.path.join(self.backup_path, dir),
-                             stat.S_IRWXU | stat.S_IRWXG, pw[2], pw[3])
+        un, uid, gid, dir_str = get_user_info(username="root")
+        for directory in ["custom/", "databases/"]:
+            utils.mkdir_safe(
+                os.path.join(self.backup_path, directory),
+                stat.S_IRWXU | stat.S_IRWXG,
+                uid,
+                gid,
+            )
         return True
 
     def set_path(self):
@@ -102,13 +120,21 @@ class Backup:
             else:
                 if not self.validate_path(self.backup_path):
                     utils.printcolor(
-                        f"Path provided: {self.backup_path}", utils.BLUE)
+                        f"Path provided: {self.backup_path}",
+                        utils.BLUE,
+                    )
                     sys.exit(1)
         else:
             user_value = None
-            while user_value == "" or user_value is None or not self.validate_path(user_value):
+            while (
+                user_value == ""
+                or user_value is None
+                or not self.validate_path(user_value)
+            ):
                 utils.printcolor(
-                    "Enter backup path (it must be an empty directory)", utils.MAGENTA)
+                    "Enter backup path (it must be an empty directory)",
+                    utils.MAGENTA,
+                )
                 utils.printcolor("CTRL+C to cancel", utils.MAGENTA)
                 user_value = utils.user_input("-> ")
 
@@ -118,7 +144,9 @@ class Backup:
     def mail_backup(self):
         if self.nomail:
             utils.printcolor(
-                "Skipping mail backup, no-mail argument provided", utils.MAGENTA)
+                "Skipping mail backup, no-mail argument provided",
+                utils.MAGENTA,
+            )
             return
 
         utils.printcolor("Backing up mails", utils.MAGENTA)
@@ -126,8 +154,10 @@ class Backup:
         home_path = self.config.get("dovecot", "home_dir")
 
         if not os.path.exists(home_path) or os.path.isfile(home_path):
-            utils.error("Error backing up Email, provided path "
-                        f" ({home_path}) seems not right...")
+            utils.error(
+                "Error backing up Email, provided path "
+                f" ({home_path}) seems not right...",
+            )
 
         else:
             dst = os.path.join(self.backup_path, "mails/")
@@ -148,48 +178,80 @@ class Backup:
         Feel free to suggest to add others!
         """
         utils.printcolor(
-            "Backing up some custom configuration...", utils.MAGENTA)
+            "Backing up some custom configuration...",
+            utils.MAGENTA,
+        )
 
         custom_path = os.path.join(
-            self.backup_path, "custom")
+            self.backup_path,
+            "custom",
+        )
 
         # DKIM Key
-        if (self.config.has_option("opendkim", "enabled") and
-                self.config.getboolean("opendkim", "enabled")):
+        if self.config.has_option(
+            "opendkim",
+            "enabled",
+        ) and self.config.getboolean("opendkim", "enabled"):
             dkim_keys = self.config.get(
-                "opendkim", "keys_storage_dir", fallback="/var/lib/dkim")
+                "opendkim",
+                "keys_storage_dir",
+                fallback="/var/lib/dkim",
+            )
             if os.path.isdir(dkim_keys):
                 shutil.copytree(dkim_keys, os.path.join(custom_path, "dkim"))
                 utils.printcolor(
-                    "DKIM keys saved!", utils.GREEN)
+                    "DKIM keys saved!",
+                    utils.GREEN,
+                )
 
         # Radicale Collections
-        if (self.config.has_option("radicale", "enabled") and
-                self.config.getboolean("radicale", "enabled")):
-            radicale_backup = os.path.join(self.config.get(
-                "radicale", "home_dir", fallback="/srv/radicale"), "collections")
+        if self.config.has_option(
+            "radicale",
+            "enabled",
+        ) and self.config.getboolean("radicale", "enabled"):
+            radicale_backup = os.path.join(
+                self.config.get(
+                    "radicale",
+                    "home_dir",
+                    fallback="/srv/radicale",
+                ),
+                "collections",
+            )
             if os.path.isdir(radicale_backup):
-                shutil.copytree(radicale_backup, os.path.join(
-                    custom_path, "radicale"))
+                shutil.copytree(
+                    radicale_backup,
+                    os.path.join(
+                        custom_path,
+                        "radicale",
+                    ),
+                )
                 utils.printcolor("Radicale files saved", utils.GREEN)
 
         # AMAVIS
-        if (self.config.has_option("amavis", "enabled") and
-                self.config.getboolean("amavis", "enabled")):
+        if self.config.has_option(
+            "amavis",
+            "enabled",
+        ) and self.config.getboolean("amavis", "enabled"):
             amavis_custom = "/etc/amavis/conf.d/99-custom"
             if os.path.isfile(amavis_custom):
                 utils.copy_file(amavis_custom, custom_path)
                 utils.printcolor(
-                    "Amavis custom configuration saved!", utils.GREEN)
+                    "Amavis custom configuration saved!",
+                    utils.GREEN,
+                )
 
         # POSTWHITE
-        if (self.config.has_option("postwhite", "enabled") and
-                self.config.getboolean("postwhite", "enabled")):
+        if self.config.has_option(
+            "postwhite",
+            "enabled",
+        ) and self.config.getboolean("postwhite", "enabled"):
             postswhite_custom = "/etc/postwhite.conf"
             if os.path.isfile(postswhite_custom):
                 utils.copy_file(postswhite_custom, custom_path)
                 utils.printcolor(
-                    "Postwhite configuration saved!", utils.GREEN)
+                    "Postwhite configuration saved!",
+                    utils.GREEN,
+                )
 
     def database_backup(self):
         """Backing up databases"""
@@ -205,17 +267,26 @@ class Backup:
         dump_path = os.path.join(self.backup_path, "databases")
         backend = database.get_backend(self.config)
 
-        if app_name == "modoboa" or (self.config.has_option(app_name, "enabled") and
-                                     self.config.getboolean(app_name, "enabled")):
+        if app_name == "modoboa" or (
+            self.config.has_option(app_name, "enabled")
+            and self.config.getboolean(app_name, "enabled")
+        ):
             dbname = self.config.get(app_name, "dbname")
             dbuser = self.config.get(app_name, "dbuser")
             dbpasswd = self.config.get(app_name, "dbpassword")
-            backend.dump_database(dbname, dbuser, dbpasswd,
-                                  os.path.join(dump_path, f"{app_name}.sql"))
+            backend.dump_database(
+                dbname,
+                dbuser,
+                dbpasswd,
+                os.path.join(dump_path, f"{app_name}.sql"),
+            )
 
     def backup_completed(self):
-        utils.printcolor("Backup process done, your backup is available here:"
-                         f"--> {self.backup_path}", utils.GREEN)
+        utils.printcolor(
+            "Backup process done, your backup is available here:"
+            f"--> {self.backup_path}",
+            utils.GREEN,
+        )
 
     def run(self):
         self.set_path()

@@ -5,7 +5,7 @@
 # SSL/TLS support: yes, no, required. <doc/wiki/SSL.txt>
 #ssl = yes
 
-# Workarround https://github.com/modoboa/modoboa/issues/2570 
+# Workarround https://github.com/modoboa/modoboa/issues/2570
 # We try to load the key and pass if it fails
 # Keys require root permissions, standard commands would be blocked
 # because dovecot can't load these cert
@@ -20,7 +20,7 @@
 # PEM encoded trusted certificate authority. Set this only if you intend to use
 # ssl_verify_client_cert=yes. The file should contain the CA certificate(s)
 # followed by the matching CRL(s). (e.g. ssl_ca = </etc/ssl/certs/ca.pem)
-#ssl_ca = 
+#ssl_ca =
 
 # Require that CRL check succeeds for client certificates.
 #ssl_require_crl = yes

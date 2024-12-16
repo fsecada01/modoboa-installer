@@ -20,7 +20,7 @@
 !include_try /usr/share/dovecot/protocols.d/*.protocol
 %protocols
 
-# A comma separated list of IPs or hosts where to listen in for connections. 
+# A comma separated list of IPs or hosts where to listen in for connections.
 # "*" listens in all IPv4 interfaces, "::" listens in all IPv6 interfaces.
 # If you want to specify non-default ports or anything more complex,
 # edit conf.d/master.conf.
@@ -45,7 +45,7 @@
 #login_trusted_networks =
 
 # Sepace separated list of login access check sockets (e.g. tcpwrap)
-#login_access_sockets = 
+#login_access_sockets =
 
 # With proxy_maybe=yes if proxy destination matches any of these IPs, don't do
 # proxying. This isn't necessary normally, but may be useful if the destination

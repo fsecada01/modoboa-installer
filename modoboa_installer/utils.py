@@ -5,13 +5,15 @@ import datetime
 import getpass
 import glob
 import os
-import pwd
+import platform
 import random
 import shutil
 import stat
 import string
 import subprocess
 import sys
+from pathlib import Path
+
 try:
     import configparser
 except ImportError:
@@ -19,13 +21,11 @@ except ImportError:
 
 from . import config_dict_template
 
-
 ENV = {}
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
 
 class FatalError(Exception):
-
     """A simple exception."""
 
     pass
@@ -33,12 +33,8 @@ class FatalError(Exception):
 
 def user_input(message):
     """Ask something to the user."""
-    try:
-        from builtins import input
-    except ImportError:
-        answer = raw_input(message)
-    else:
-        answer = input(message)
+
+    answer = input(message)
     return answer
 
 
@@ -78,27 +74,30 @@ def exec_cmd(cmd, sudo_user=None, login=True, **kwargs):
 
 def dist_info():
     """Try to return information about the system we're running on."""
-    path = "/etc/os-release"
-    if os.path.exists(path):
-        info = {}
-        with open(path) as fp:
-            for line in fp.readlines():
-                if line == '\n':
-                    continue
-                key, value = line.split("=")
-                value = value.rstrip('"\n')
-                value = value.strip('"')
-                info[key] = value
-        return info["NAME"], info["VERSION_ID"]
-    printcolor(
-        "Failed to retrieve information about your system, aborting.",
-        RED)
-    sys.exit(1)
+    if platform.system() == "Linux":
+        path = "/etc/os-release"
+        if os.path.exists(path):
+            info = {}
+            with open(path) as fp:
+                for line in fp.readlines():
+                    if line == "\n":
+                        continue
+                    key, value = line.split("=")
+                    value = value.rstrip('"\n')
+                    value = value.strip('"')
+                    info[key] = value
+            return info["NAME"], info["VERSION_ID"]
+        printcolor(
+            "Failed to retrieve information about your system, aborting.",
+            RED,
+        )
+        sys.exit(1)
 
 
 def dist_name():
     """Try to guess the distribution name."""
-    return dist_info()[0].lower()
+    dist_name = dist_info()
+    return dist_name[0].lower() if dist_name else "No known distribution name"
 
 
 def mkdir(path, mode, uid, gid):
@@ -121,7 +120,10 @@ def make_password(length=16):
     """Create a random password."""
     return "".join(
         random.SystemRandom().choice(
-            string.ascii_letters + string.digits) for _ in range(length))
+            string.ascii_letters + string.digits,
+        )
+        for _ in range(length)
+    )
 
 
 @contextlib.contextmanager
@@ -145,7 +147,9 @@ def backup_file(fname):
     for f in glob.glob("{}.old.*".format(fname)):
         os.unlink(f)
     bak_name = "{}.old.{}".format(
-        fname, datetime.datetime.now().isoformat())
+        fname,
+        datetime.datetime.now().isoformat(),
+    )
     shutil.copy(fname, bak_name)
 
 
@@ -167,12 +171,18 @@ def copy_from_template(template, dest, context):
         backup_file(dest)
     with open(dest, "w") as fp:
         fp.write(
-            "# This file was automatically installed on {}\n"
-            .format(now))
+            "# This file was automatically installed on {}\n".format(now),
+        )
         fp.write(ConfigFileTemplate(buf).substitute(context))
 
 
-def check_config_file(dest, interactive=False, upgrade=False, backup=False, restore=False):
+def check_config_file(
+    dest,
+    interactive=False,
+    upgrade=False,
+    backup=False,
+    restore=False,
+):
     """Create a new installer config file if needed."""
     is_present = True
     if os.path.exists(dest):
@@ -180,22 +190,30 @@ def check_config_file(dest, interactive=False, upgrade=False, backup=False, rest
     if upgrade:
         printcolor(
             "You cannot upgrade an existing installation without a "
-            "configuration file.", RED)
+            "configuration file.",
+            RED,
+        )
         sys.exit(1)
     elif backup:
         is_present = False
         printcolor(
-            "Your configuration file hasn't been found. A new one will be generated. "
-            "Please edit it with correct password for the databases !", RED)
+            "Your configuration file hasn't been found. A new one will "
+            "be generated. Please edit it with correct password for the "
+            "databases !",
+            RED,
+        )
     elif restore:
         printcolor(
             "You cannot restore an existing installation without a "
-            f"configuration file. (file : {dest} has not been found...", RED)
+            f"configuration file. (file : {dest} has not been found...",
+            RED,
+        )
         sys.exit(1)
 
     printcolor(
-        "Configuration file {} not found, creating new one."
-        .format(dest), YELLOW)
+        "Configuration file {} not found, creating new one.".format(dest),
+        YELLOW,
+    )
     gen_config(dest, interactive)
     return is_present, None
 
@@ -208,9 +226,11 @@ def has_colours(stream):
         return False  # auto color only on TTYs
     try:
         import curses
+
         curses.setupterm()
         return curses.tigetnum("colors") > 2
-    except:
+    except Exception as e:
+        print(type(e), e, e.args)
         # guess false in case of error
         return False
 
@@ -242,8 +262,8 @@ def convert_version_to_int(version):
     numbers = [int(number_string) for number_string in version.split(".")]
     if len(numbers) > len(number_bits):
         raise NotImplementedError(
-            "Versions with more than {0} decimal places are not supported"
-            .format(len(number_bits) - 1)
+            f"Versions with more than {len(number_bits) - 1} decimal places "
+            f"are not supported",
         )
     # add 0s for missing numbers
     numbers.extend([0] * (len(number_bits) - len(numbers)))
@@ -254,25 +274,25 @@ def convert_version_to_int(version):
         max_num = (bits + 1) - 1
         if num >= 1 << max_num:
             raise ValueError(
-                "Number {0} cannot be stored with only {1} bits. Max is {2}"
-                .format(num, bits, max_num)
+                f"Number {num} cannot be stored with only {bits} bits. Max is "
+                f"{max_num}",
             )
         number += num << total_bits
         total_bits += bits
     return number
 
 
-def random_key(l=16):
+def random_key(length=16):
     """Generate a random key.
 
-    :param integer l: the key's length
+    :param integer length: the key's length
     :return: a string
     """
     punctuation = """!#$%&()*+,-./:;<=>?@[]^_`{|}~"""
     population = string.digits + string.ascii_letters + punctuation
     while True:
-        key = "".join(random.sample(population * l, l))
-        if len(key) == l:
+        key = "".join(random.sample(population * length, length))
+        if len(key) == length:
             return key
 
 
@@ -297,13 +317,14 @@ def validate(value, config_entry):
 
 
 def get_entry_value(entry, interactive):
+    values = []
     if callable(entry["default"]):
         default_value = entry["default"]()
     else:
         default_value = entry["default"]
     user_value = None
     if entry.get("customizable") and interactive:
-        while (user_value != '' and not validate(user_value, entry)):
+        while user_value != "" and not validate(user_value, entry):
             question = entry.get("question")
             if entry.get("values"):
                 question += " from the list"
@@ -323,7 +344,7 @@ def get_entry_value(entry, interactive):
                 f"{user_value} cannot be set interactively. "
                 "Please configure installer.cfg manually by running "
                 "'python3 run.py --stop-after-configfile-check domain'. "
-                "Check modoboa-installer README for more information."
+                "Check modoboa-installer README for more information.",
             )
             sys.exit(1)
 
@@ -340,7 +361,8 @@ def load_config_template(interactive):
             config_key, value = section.get("if").split("=")
             section_name, option = config_key.split(".")
             interactive_section = (
-                config.get(section_name, option) == value and interactive)
+                config.get(section_name, option) == value and interactive
+            )
         else:
             interactive_section = interactive
         config.add_section(section["name"])
@@ -365,10 +387,11 @@ def update_config(path, apply_update=True):
     dropped_sections = list(set(old_sections) - set(new_sections))
     added_sections = list(set(new_sections) - set(old_sections))
     if len(dropped_sections) > 0 and apply_update:
-        printcolor("Following section(s) will not be ported "
-                   "due to being deleted or renamed: " +
-                   ', '.join(dropped_sections),
-                   RED)
+        printcolor(
+            "Following section(s) will not be ported "
+            "due to being deleted or renamed: " + ", ".join(dropped_sections),
+            RED,
+        )
 
     if len(dropped_sections) + len(added_sections) > 0:
         update = True
@@ -381,11 +404,12 @@ def update_config(path, apply_update=True):
             dropped_options = list(set(old_options) - set(new_options))
             added_options = list(set(new_options) - set(old_options))
             if len(dropped_options) > 0 and apply_update:
-                printcolor(f"Following option(s) from section: {section}, "
-                           "will not be ported due to being "
-                           "deleted or renamed: " +
-                           ', '.join(dropped_options),
-                           RED)
+                printcolor(
+                    f"Following option(s) from section: {section}, "
+                    "will not be ported due to being "
+                    "deleted or renamed: " + ", ".join(dropped_options),
+                    RED,
+                )
             if len(dropped_options) + len(added_options) > 0:
                 update = True
 
@@ -407,10 +431,11 @@ def update_config(path, apply_update=True):
             with open(path, "w") as configfile:
                 new_config.write(configfile)
 
-            # Set file owner to running u+g, and set config file permission to 600
+            # Set file owner to running u+g, and set config file permission to
+            # 600
             current_username = getpass.getuser()
-            current_user = pwd.getpwnam(current_username)
-            os.chown(dest, current_user[2], current_user[3])
+            un, uid, gid, dir_str = get_user_info(username=current_username)
+            os.chown(dest, uid, gid)
             os.chmod(dest, stat.S_IRUSR | stat.S_IWUSR)
 
             return dest
@@ -427,10 +452,11 @@ def gen_config(dest, interactive=False):
     with open(dest, "w") as configfile:
         config.write(configfile)
 
-    # Set file owner to running user and group, and set config file permission to 600
+    # Set file owner to running user and group, and set config file permission
+    # to 600
     current_username = getpass.getuser()
-    current_user = pwd.getpwnam(current_username)
-    os.chown(dest, current_user[2], current_user[3])
+    un, uid, gid, dir_str = get_user_info(username=current_username)
+    os.chown(dest, uid, gid)
     os.chmod(dest, stat.S_IRUSR | stat.S_IWUSR)
 
 
@@ -439,28 +465,34 @@ def validate_backup_path(path: str, silent_mode: bool):
     path_exists = os.path.exists(path)
     if path_exists and os.path.isfile(path):
         printcolor(
-            "Error, you provided a file instead of a directory!", RED)
+            "Error, you provided a file instead of a directory!",
+            RED,
+        )
         return None
 
     if not path_exists:
         if not silent_mode:
             create_dir = input(
-                f"\"{path}\" doesn't exist, would you like to create it? [Y/n]\n"
+                f'"{path}" doesn\'t exist, would you like to create it? '
+                f"[Y/n]\n",
             ).lower()
 
         if silent_mode or (not silent_mode and create_dir.startswith("y")):
-            pw = pwd.getpwnam("root")
-            mkdir_safe(path, stat.S_IRWXU | stat.S_IRWXG, pw[2], pw[3])
+            un, uid, gid, dir_str = get_user_info(username="root")
+            mkdir_safe(path, stat.S_IRWXU | stat.S_IRWXG, uid, gid)
         else:
             printcolor(
-                "Error, backup directory not present.", RED
+                "Error, backup directory not present.",
+                RED,
             )
             return None
 
     if len(os.listdir(path)) != 0:
         if not silent_mode:
             delete_dir = input(
-                "Warning: backup directory is not empty, it will be purged if you continue... [Y/n]\n").lower()
+                "Warning: backup directory is not empty, it will be purged if "
+                "you continue... [Y/n]\n",
+            ).lower()
 
         if silent_mode or (not silent_mode and delete_dir.startswith("y")):
             try:
@@ -468,20 +500,53 @@ def validate_backup_path(path: str, silent_mode: bool):
             except FileNotFoundError:
                 pass
 
-            shutil.rmtree(os.path.join(path, "custom"),
-                          ignore_errors=False)
+            shutil.rmtree(
+                os.path.join(path, "custom"),
+                ignore_errors=False,
+            )
             shutil.rmtree(os.path.join(path, "mails"), ignore_errors=False)
-            shutil.rmtree(os.path.join(path, "databases"),
-                          ignore_errors=False)
+            shutil.rmtree(
+                os.path.join(path, "databases"),
+                ignore_errors=False,
+            )
         else:
             printcolor(
-                "Error: backup directory not clean.", RED
+                "Error: backup directory not clean.",
+                RED,
             )
             return None
 
     backup_path = path
-    pw = pwd.getpwnam("root")
-    for dir in ["custom/", "databases/"]:
-        mkdir_safe(os.path.join(backup_path, dir),
-                   stat.S_IRWXU | stat.S_IRWXG, pw[2], pw[3])
+    un, uid, gid, dir_str = get_user_info(username="root")
+    for directory in ["custom/", "databases/"]:
+        mkdir_safe(
+            os.path.join(backup_path, directory),
+            stat.S_IRWXU | stat.S_IRWXG,
+            uid,
+            gid,
+        )
     return backup_path
+
+
+def get_user_info(username: str):
+    """
+    Utility function to return user UID and GID info. A workaround to replace
+    `pwd` module dependency
+    Args:
+        username: str
+
+    Returns:
+        tuple[str, str, str] | None
+
+    """
+    try:
+        pw_dir = Path.home() / username
+        pw_dir = pw_dir.resolve()
+        return (
+            username,
+            os.stat(pw_dir).st_uid,
+            os.stat(pw_dir).st_gid,
+            str(pw_dir),
+        )
+    except KeyError:
+        return None

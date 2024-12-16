@@ -5,7 +5,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-
 from io import StringIO
 from pathlib import Path
 
@@ -16,7 +15,7 @@ except ImportError:
 try:
     from unittest.mock import patch
 except ImportError:
-    from mock import patch
+    from unittest.mock import patch
 
 import run
 
@@ -37,25 +36,39 @@ class ConfigFileTestCase(unittest.TestCase):
         """Check simple case."""
         out = StringIO()
         sys.stdout = out
-        run.main([
-            "--stop-after-configfile-check",
-            "--configfile", self.cfgfile,
-            "example.test"])
+        run.main(
+            [
+                "--stop-after-configfile-check",
+                "--configfile",
+                self.cfgfile,
+                "example.test",
+            ],
+        )
         self.assertTrue(os.path.exists(self.cfgfile))
 
     @patch("modoboa_installer.utils.user_input")
     def test_interactive_mode(self, mock_user_input):
         """Check interactive mode."""
         mock_user_input.side_effect = [
-            "0", "0", "", "", "", "", ""
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
         ]
         with open(os.devnull, "w") as fp:
             sys.stdout = fp
-            run.main([
-                "--stop-after-configfile-check",
-                "--configfile", self.cfgfile,
-                "--interactive",
-                "example.test"])
+            run.main(
+                [
+                    "--stop-after-configfile-check",
+                    "--configfile",
+                    self.cfgfile,
+                    "--interactive",
+                    "example.test",
+                ],
+            )
         self.assertTrue(os.path.exists(self.cfgfile))
         config = configparser.ConfigParser()
         config.read(self.cfgfile)
@@ -69,51 +82,74 @@ class ConfigFileTestCase(unittest.TestCase):
 
         out = StringIO()
         sys.stdout = out
-        run.main([
-            "--stop-after-configfile-check",
-            "--configfile", cfgfile_temp,
-            "example.test"])
+        run.main(
+            [
+                "--stop-after-configfile-check",
+                "--configfile",
+                cfgfile_temp,
+                "example.test",
+            ],
+        )
         self.assertTrue(os.path.exists(cfgfile_temp))
 
         # Adding a dummy section
         with open(cfgfile_temp, "a") as fp:
             fp.write(
-"""
+                """
 [dummy]
     weird_old_option = "hey
-""")
+""",
+            )
         mock_user_input.side_effect = ["y"]
         out = StringIO()
         sys.stdout = out
-        run.main([
-            "--stop-after-configfile-check",
-            "--configfile", cfgfile_temp,
-            "example.test"])
+        run.main(
+            [
+                "--stop-after-configfile-check",
+                "--configfile",
+                cfgfile_temp,
+                "example.test",
+            ],
+        )
         self.assertIn("dummy", out.getvalue())
         self.assertTrue(Path(self.workdir).glob("*.old"))
-        self.assertIn("Update complete",
-                      out.getvalue()
+        self.assertIn(
+            "Update complete",
+            out.getvalue(),
         )
 
     @patch("modoboa_installer.utils.user_input")
     def test_interactive_mode_letsencrypt(self, mock_user_input):
         """Check interactive mode."""
         mock_user_input.side_effect = [
-            "1", "admin@example.test", "0", "", "", "", "", ""
+            "1",
+            "admin@example.test",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
         ]
         with open(os.devnull, "w") as fp:
             sys.stdout = fp
-            run.main([
-                "--stop-after-configfile-check",
-                "--configfile", self.cfgfile,
-                "--interactive",
-                "example.test"])
+            run.main(
+                [
+                    "--stop-after-configfile-check",
+                    "--configfile",
+                    self.cfgfile,
+                    "--interactive",
+                    "example.test",
+                ],
+            )
         self.assertTrue(os.path.exists(self.cfgfile))
         config = configparser.ConfigParser()
         config.read(self.cfgfile)
         self.assertEqual(config.get("certificate", "type"), "letsencrypt")
         self.assertEqual(
-            config.get("letsencrypt", "email"), "admin@example.test")
+            config.get("letsencrypt", "email"),
+            "admin@example.test",
+        )
 
     @patch("modoboa_installer.utils.user_input")
     def test_configfile_loading(self, mock_user_input):
@@ -121,17 +157,22 @@ class ConfigFileTestCase(unittest.TestCase):
         mock_user_input.side_effect = ["no"]
         out = StringIO()
         sys.stdout = out
-        run.main([
-            "--configfile", self.cfgfile,
-            "example.test"])
+        run.main(
+            [
+                "--configfile",
+                self.cfgfile,
+                "example.test",
+            ],
+        )
         self.assertTrue(os.path.exists(self.cfgfile))
         self.assertIn(
             "modoboa automx amavis clamav dovecot nginx razor postfix"
             " postwhite spamassassin uwsgi",
-            out.getvalue()
+            out.getvalue(),
         )
-        self.assertNotIn("It seems that your config file is outdated.",
-                         out.getvalue()
+        self.assertNotIn(
+            "It seems that your config file is outdated.",
+            out.getvalue(),
         )
 
     @patch("modoboa_installer.utils.user_input")
@@ -141,21 +182,29 @@ class ConfigFileTestCase(unittest.TestCase):
         # 1. Generate a config file
         with open(os.devnull, "w") as fp:
             sys.stdout = fp
-            run.main([
-                "--stop-after-configfile-check",
-                "--configfile", self.cfgfile,
-                "example.test"])
+            run.main(
+                [
+                    "--stop-after-configfile-check",
+                    "--configfile",
+                    self.cfgfile,
+                    "example.test",
+                ],
+            )
         # 2. Run upgrade
         out = StringIO()
         sys.stdout = out
-        run.main([
-            "--configfile", self.cfgfile,
-            "--upgrade",
-            "example.test"])
+        run.main(
+            [
+                "--configfile",
+                self.cfgfile,
+                "--upgrade",
+                "example.test",
+            ],
+        )
         self.assertIn(
             "Your mail server is about to be upgraded and the following "
             "components will be impacted:",
-            out.getvalue()
+            out.getvalue(),
         )
 
     def test_upgrade_no_config_file(self):
@@ -163,14 +212,18 @@ class ConfigFileTestCase(unittest.TestCase):
         out = StringIO()
         sys.stdout = out
         with self.assertRaises(SystemExit):
-            run.main([
-                "--configfile", self.cfgfile,
-                "--upgrade",
-                "example.test"
-            ])
+            run.main(
+                [
+                    "--configfile",
+                    self.cfgfile,
+                    "--upgrade",
+                    "example.test",
+                ],
+            )
         self.assertIn(
             "You cannot upgrade an existing installation without a "
-            "configuration file.", out.getvalue()
+            "configuration file.",
+            out.getvalue(),
         )
 
 

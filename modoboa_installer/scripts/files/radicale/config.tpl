@@ -71,7 +71,7 @@
 
 # Authentication method
 # Value: none | htpasswd | remote_user | http_x_remote_user
-type = radicale_dovecot_auth 
+type = radicale_dovecot_auth
 
 # Htpasswd filename
 # htpasswd_filename = users
@@ -80,7 +80,7 @@ type = radicale_dovecot_auth
 # Value: plain | sha1 | ssha | crypt | bcrypt | md5
 # Only bcrypt can be considered secure.
 # bcrypt and md5 require the passlib library to be installed.
-# htpasswd_encryption = plain 
+# htpasswd_encryption = plain
 
 # Incorrect authentication delay (seconds)
 #delay = 1
@@ -92,7 +92,7 @@ auth_socket = %{auth_socket_path}
 
 # Rights backend
 # Value: none | authenticated | owner_only | owner_write | from_file
-type = from_file 
+type = from_file
 
 # File for rights management from_file
 file = %{config_dir}/rights
@@ -134,7 +134,7 @@ filesystem_folder = %{home_dir}/collections
 
 # Web interface backend
 # Value: none | internal
-type = none 
+type = none
 
 
 [logging]

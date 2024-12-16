@@ -10,7 +10,8 @@ def load_app_script(appname):
     """Load module corresponding to the given appname."""
     try:
         script = importlib.import_module(
-            "modoboa_installer.scripts.{}".format(appname))
+            "modoboa_installer.scripts.{}".format(appname),
+        )
     except ImportError:
         print("Unknown application {}".format(appname))
         sys.exit(1)
@@ -19,14 +20,20 @@ def load_app_script(appname):
 
 def install(appname: str, config, upgrade: bool, archive_path: str):
     """Install an application."""
-    if (config.has_option(appname, "enabled") and
-            not config.getboolean(appname, "enabled")):
+    if config.has_option(appname, "enabled") and not config.getboolean(
+        appname,
+        "enabled",
+    ):
         return
 
     utils.printcolor("Installing {}".format(appname), utils.MAGENTA)
     script = load_app_script(appname)
     try:
-        getattr(script, appname.capitalize())(config, upgrade, archive_path).run()
+        getattr(script, appname.capitalize())(
+            config,
+            upgrade,
+            archive_path,
+        ).run()
     except utils.FatalError as inst:
         utils.error("{}".format(inst))
         sys.exit(1)
@@ -34,8 +41,10 @@ def install(appname: str, config, upgrade: bool, archive_path: str):
 
 def backup(appname, config, path):
     """Backup an application."""
-    if (config.has_option(appname, "enabled") and
-            not config.getboolean(appname, "enabled")):
+    if config.has_option(appname, "enabled") and not config.getboolean(
+        appname,
+        "enabled",
+    ):
         return
 
     utils.printcolor("Backing up {}".format(appname), utils.MAGENTA)
@@ -50,5 +59,6 @@ def backup(appname, config, path):
 def restore_prep(restore):
     """Restore instance"""
     script = importlib.import_module(
-        "modoboa_installer.scripts.restore")
-    getattr(script, "Restore")(restore)
+        "modoboa_installer.scripts.restore",
+    )
+    script.Restore(restore)

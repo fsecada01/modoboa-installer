@@ -5,21 +5,24 @@
 import argparse
 import datetime
 import os
+
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import ConfigParser as configparser  # noqa
+
 import sys
 
 import checks
-from modoboa_installer import compatibility_matrix
-from modoboa_installer import constants
-from modoboa_installer import package
-from modoboa_installer import scripts
-from modoboa_installer import ssl
-from modoboa_installer import system
-from modoboa_installer import utils
-
+from modoboa_installer import (
+    compatibility_matrix,
+    constants,
+    package,
+    scripts,
+    ssl,
+    system,
+    utils,
+)
 
 PRIMARY_APPS = [
     "amavis",
@@ -31,7 +34,7 @@ PRIMARY_APPS = [
     "nginx",
     "opendkim",
     "postfix",
-    "dovecot"
+    "dovecot",
 ]
 
 
@@ -40,9 +43,10 @@ def installation_disclaimer(args, config):
     hostname = config.get("general", "hostname")
     utils.printcolor(
         "Notice:\n"
-        "It is recommanded to run this installer on a FRESHLY installed server.\n"
+        "It is recommanded to run this installer on a FRESHLY installed "
+        "server.\n"
         "(ie. with nothing special already installed on it)\n",
-        utils.CYAN
+        utils.CYAN,
     )
     utils.printcolor(
         "Warning:\n"
@@ -52,37 +56,43 @@ def installation_disclaimer(args, config):
         "     @ IN MX  {}.\n".format(
             args.domain,
             hostname.replace(".{}".format(args.domain), ""),
-            hostname
+            hostname,
         ),
-        utils.YELLOW
+        utils.YELLOW,
     )
     utils.printcolor(
         "Your mail server will be installed with the following components:",
-        utils.BLUE)
+        utils.BLUE,
+    )
 
 
-def upgrade_disclaimer(config):
+def upgrade_disclaimer():
     """Display upgrade disclaimer."""
     utils.printcolor(
         "Your mail server is about to be upgraded and the following components"
-        " will be impacted:", utils.BLUE
+        " will be impacted:",
+        utils.BLUE,
     )
 
 
 def backup_disclaimer():
-    """Display backup disclamer. """
+    """Display backup disclamer."""
     utils.printcolor(
         "Your mail server will be backed up locally.\n"
         " !! You should really transfer the backup somewhere else...\n"
-        " !! Custom configuration (like for postfix) won't be saved.", utils.BLUE)
+        " !! Custom configuration (like for postfix) won't be saved.",
+        utils.BLUE,
+    )
 
 
 def restore_disclaimer():
-    """Display restore disclamer. """
+    """Display restore disclamer."""
     utils.printcolor(
         "You are about to restore a previous installation of Modoboa.\n"
-        "If a new version has been released in between, please update your database!",
-        utils.BLUE)
+        "If a new version has been released in between, please update your "
+        "database!",
+        utils.BLUE,
+    )
 
 
 def backup_system(config, args):
@@ -108,13 +118,16 @@ def backup_system(config, args):
         while not user_value or not backup_path:
             utils.printcolor(
                 "Enter backup path (it must be an empty directory)",
-                utils.MAGENTA
+                utils.MAGENTA,
             )
             utils.printcolor("CTRL+C to cancel", utils.MAGENTA)
             user_value = utils.user_input("-> ")
             if not user_value:
                 continue
-            backup_path = utils.validate_backup_path(user_value, args.silent_backup)
+            backup_path = utils.validate_backup_path(
+                user_value,
+                args.silent_backup,
+            )
 
     # Backup configuration file
     utils.copy_file(args.configfile, backup_path)
@@ -127,66 +140,122 @@ def backup_system(config, args):
 
 
 def config_file_update_complete(backup_location):
-    utils.printcolor("Update complete. It seems successful.",
-                     utils.BLUE)
+    """
+
+    Args:
+        backup_location:
+
+    Returns:
+
+    """
+    utils.printcolor(
+        "Update complete. It seems successful.",
+        utils.BLUE,
+    )
     if backup_location is not None:
-        utils.printcolor("You will find your old config file "
-                         f"here: {backup_location}",
-                         utils.BLUE)
+        utils.printcolor(
+            "You will find your old config file " f"here: {backup_location}",
+            utils.BLUE,
+        )
 
 
 def main(input_args):
     """Install process."""
     parser = argparse.ArgumentParser()
-    versions = (
-        ["latest"] + list(compatibility_matrix.COMPATIBILITY_MATRIX.keys())
-    )
-    parser.add_argument("--debug", action="store_true", default=False,
-                        help="Enable debug output")
-    parser.add_argument("--force", action="store_true", default=False,
-                        help="Force installation")
-    parser.add_argument("--configfile", default="installer.cfg",
-                        help="Configuration file to use")
-    parser.add_argument(
-        "--version", default="latest", choices=versions,
-        help="Modoboa version to install")
-    parser.add_argument(
-        "--stop-after-configfile-check", action="store_true", default=False,
-        help="Check configuration, generate it if needed and exit")
-    parser.add_argument(
-        "--interactive", action="store_true", default=False,
-        help="Generate configuration file with user interaction")
-    parser.add_argument(
-        "--upgrade", action="store_true", default=False,
-        help="Run the installer in upgrade mode")
-    parser.add_argument(
-        "--beta", action="store_true", default=False,
-        help="Install latest beta release of Modoboa instead of the stable one")
-    parser.add_argument(
-        "--backup-path", type=str, metavar="path",
-        help="To use with --silent-backup, you must provide a valid path")
-    parser.add_argument(
-        "--backup", action="store_true", default=False,
-        help="Backing up interactively previously installed instance"
+    versions = ["latest"] + list(
+        compatibility_matrix.COMPATIBILITY_MATRIX.keys(),
     )
     parser.add_argument(
-        "--silent-backup", action="store_true", default=False,
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Enable debug output",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force installation",
+    )
+    parser.add_argument(
+        "--configfile",
+        default="installer.cfg",
+        help="Configuration file to use",
+    )
+    parser.add_argument(
+        "--version",
+        default="latest",
+        choices=versions,
+        help="Modoboa version to install",
+    )
+    parser.add_argument(
+        "--stop-after-configfile-check",
+        action="store_true",
+        default=False,
+        help="Check configuration, generate it if needed and exit",
+    )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        default=False,
+        help="Generate configuration file with user interaction",
+    )
+    parser.add_argument(
+        "--upgrade",
+        action="store_true",
+        default=False,
+        help="Run the installer in upgrade mode",
+    )
+    parser.add_argument(
+        "--beta",
+        action="store_true",
+        default=False,
+        help="Install latest beta release of Modoboa instead of the stable one",
+    )
+    parser.add_argument(
+        "--backup-path",
+        type=str,
+        metavar="path",
+        help="To use with --silent-backup, you must provide a valid path",
+    )
+    parser.add_argument(
+        "--backup",
+        action="store_true",
+        default=False,
+        help="Backing up interactively previously installed instance",
+    )
+    parser.add_argument(
+        "--silent-backup",
+        action="store_true",
+        default=False,
         help="For script usage, do not require user interaction "
         "backup will be saved at ./modoboa_backup/Backup_M_Y_d_H_M "
-        "if --backup-path is not provided")
+        "if --backup-path is not provided",
+    )
     parser.add_argument(
-        "--no-mail", action="store_true", default=False,
-        help="Disable mail backup (save space)")
+        "--no-mail",
+        action="store_true",
+        default=False,
+        help="Disable mail backup (save space)",
+    )
     parser.add_argument(
-        "--restore", type=str, metavar="path",
-        help="Restore a previously backup up modoboa instance on a NEW machine. "
-        "You MUST provide backup directory"
+        "--restore",
+        type=str,
+        metavar="path",
+        help="Restore a previously backup up modoboa instance on a NEW "
+        "machine. You MUST provide backup directory",
     ),
     parser.add_argument(
-        "--skip-checks", action="store_true", default=False,
-        help="Skip the checks the installer performs initially")
-    parser.add_argument("domain", type=str,
-                        help="The main domain of your future mail server")
+        "--skip-checks",
+        action="store_true",
+        default=False,
+        help="Skip the checks the installer performs initially",
+    )
+    parser.add_argument(
+        "domain",
+        type=str,
+        help="The main domain of your future mail server",
+    )
     args = parser.parse_args(input_args)
 
     if args.debug:
@@ -196,10 +265,10 @@ def main(input_args):
     is_restoring = False
     if args.restore is not None:
         is_restoring = True
-        args.configfile = os.path.join(args.restore, args.configfile)
+        args.configfile = os.path.join(args.restore, args.configfile)  # noqa
         if not os.path.exists(args.configfile):
             utils.error(
-                "Installer configuration file not found in backup!"
+                "Installer configuration file not found in backup!",
             )
             sys.exit(1)
 
@@ -212,26 +281,39 @@ def main(input_args):
         utils.success("Checks complete\n")
 
     is_config_file_available, outdate_config = utils.check_config_file(
-        args.configfile, args.interactive, args.upgrade, args.backup, is_restoring)
+        args.configfile,
+        args.interactive,
+        args.upgrade,
+        args.backup,
+        is_restoring,
+    )
 
     if not is_config_file_available and (
-            args.upgrade or args.backup or args.silent_backup):
+        args.upgrade or args.backup or args.silent_backup
+    ):
         utils.error("No config file found.")
         return
 
     # Check if config is outdated and ask user if it needs to be updated
     if is_config_file_available and outdate_config:
-        answer = utils.user_input("It seems that your config file is outdated. "
-                                  "Would you like to update it? (Y/n) ")
+        answer = utils.user_input(
+            "It seems that your config file is outdated. "
+            "Would you like to update it? (Y/n) ",
+        )
         if not answer or answer.lower().startswith("y"):
             config_file_update_complete(utils.update_config(args.configfile))
             if not args.stop_after_configfile_check:
-                answer = utils.user_input("Would you like to stop to review the updated config? (Y/n)")
+                answer = utils.user_input(
+                    "Would you like to stop to review the updated config? "
+                    "(Y/n)",
+                )
                 if not answer or answer.lower().startswith("y"):
                     return
         else:
-            utils.error("You might encounter unexpected errors ! "
-                        "Make sure to update your config before opening an issue!")
+            utils.error(
+                "You might encounter unexpected errors ! "
+                "Make sure to update your config before opening an issue!",
+            )
 
     if args.stop_after_configfile_check:
         return
@@ -252,7 +334,7 @@ def main(input_args):
 
     # Display disclaimer python 3 linux distribution
     if args.upgrade:
-        upgrade_disclaimer(config)
+        upgrade_disclaimer()
     elif args.restore:
         restore_disclaimer()
         scripts.restore_prep(args.restore)
@@ -262,11 +344,20 @@ def main(input_args):
     # Show concerned components
     components = []
     for section in config.sections():
-        if section in ["general", "database", "mysql", "postgres",
-                       "certificate", "letsencrypt", "backup"]:
+        if section in [
+            "general",
+            "database",
+            "mysql",
+            "postgres",
+            "certificate",
+            "letsencrypt",
+            "backup",
+        ]:
             continue
-        if (config.has_option(section, "enabled") and
-                not config.getboolean(section, "enabled")):
+        if config.has_option(section, "enabled") and not config.getboolean(
+            section,
+            "enabled",
+        ):
             continue
         components.append(section)
     utils.printcolor(" ".join(components), utils.YELLOW)
@@ -277,7 +368,9 @@ def main(input_args):
     config.set("general", "force", str(args.force))
     utils.printcolor(
         "The process can be long, feel free to take a coffee "
-        "and come back later ;)", utils.BLUE)
+        "and come back later ;)",
+        utils.BLUE,
+    )
     utils.success("Starting...")
     package.backend.prepare_system()
     package.backend.install_many(["sudo", "wget"])
@@ -290,26 +383,28 @@ def main(input_args):
     package.backend.restore_system()
     if not args.restore:
         utils.success(
-            "Congratulations! You can enjoy Modoboa at https://{} (admin:password)"
-            .format(config.get("general", "hostname"))
+            f"Congratulations! You can enjoy Modoboa at "
+            f"https://{config.get("general", "hostname")} ("
+            f"admin:password)",
         )
     else:
         utils.success(
-            "Restore complete! You can enjoy Modoboa at https://{} (same credentials as before)"
-            .format(config.get("general", "hostname"))
+            f"Restore complete! You can enjoy Modoboa at "
+            f"https://{config.get("general", "hostname")} (same "
+            f"credentials as before)",
         )
     utils.success(
         "\n"
         "Modoboa is a free software maintained by volunteers.\n"
         "You like the project and want it to be sustainable?\n"
-        "Then don't wait anymore and go sponsor it here:\n"
+        "Then don't wait anymore and go sponsor it here:\n",
     )
     utils.printcolor(
         "https://github.com/sponsors/modoboa\n",
-        utils.YELLOW
+        utils.YELLOW,
     )
     utils.success(
-        "Thank you for your help :-)\n"
+        "Thank you for your help :-)\n",
     )
 
 

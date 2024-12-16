@@ -54,7 +54,7 @@ service lmtp {
   #inet_listener lmtp {
     # Avoid making LMTP visible for the entire internet
     #address =
-    #port = 
+    #port =
   #}
 
   unix_listener /var/spool/postfix/private/dovecot-lmtp {
@@ -121,7 +121,7 @@ service auth {
   unix_listener auth-userdb {
     #mode = 0666
     user = %{mailboxes_owner}
-    #group = 
+    #group =
   }
 
   # Postfix smtp-auth
@@ -155,6 +155,6 @@ service dict {
   unix_listener dict {
     mode = 0600
     user = %{mailboxes_owner}
-    #group = 
+    #group =
   }
 }

@@ -24,7 +24,7 @@ apt install wget \
 add-apt-repository ppa:deadsnakes/ppa
 apt install openssh-client \
   python3.13-dev \
-  python3.13 full \
+  python3.13-full \
   python3.13-venv \
   git \
   postgresql \

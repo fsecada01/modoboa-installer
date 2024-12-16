@@ -7,6 +7,7 @@ export TZ='America/New York'
 apt-get update && apt-get upgrade -y
 apt install wget \
   build-essential \
+  curl \
   software-properties-common \
   libncursesw5-dev \
   libssl-dev \

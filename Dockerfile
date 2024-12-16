@@ -11,7 +11,7 @@ ARG GIT_BRANCH="master"
 ENV WORKDIR="/opt/modoboa"
 RUN apt update
 RUN apt install git -y
-RUN git clone -b ${GIT_BRANCH} https://github.com/modoboa/modoboa-installer
+RUN git clone -b ${GIT_BRANCH} https://github.com/fsecada01/modoboa-installer "${WORKDIR}"
 WORKDIR /opt/modoboa
 WORKDIR ${WORKDIR}
 RUN mkdir -p /tmp/log/celery

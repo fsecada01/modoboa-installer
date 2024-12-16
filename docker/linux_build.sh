@@ -8,7 +8,6 @@ apt-get update && apt-get upgrade -y
 apt install wget \
   build-essential \
   software-properties-common \
-  git \
   libncursesw5-dev \
   libssl-dev \
   libsqlite3-dev \
@@ -21,3 +20,14 @@ apt install wget \
   libcairo2 \
   libcairo2-dev \
   zlib1g-dev -y
+add-apt-repository ppa:deadsnakes/ppa
+apt install openssh-client \
+  python3.13-dev \
+  python3.13 full \
+  python3.13-venv \
+  git \
+  postgresql \
+  supervisor \
+  g++ \
+  gcc \
+  locales -y
